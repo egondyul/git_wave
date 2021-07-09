@@ -43,15 +43,13 @@ class Elasticity2D
 
 	};
 
-	void filename(char* name, int i, char* F);
+	void filename(char* path, char* name, int i, char* F);
 	realval average_x(realval A[], int i, int j, int Nx);
 	realval average_z(realval A[], int i, int j, int Nx);
 	realval average_xz(realval A[], int i, int j, int Nx);
 
-	realval average_x_vec(std::vector<realval> &A, int i, int j, int Nx);
-	realval average_z_vec(std::vector<realval> &A, int i, int j, int Nx);
-	realval average_xz_vec(std::vector<realval> &A, int i, int j, int Nx);
-	void readData();
+	void readData_geometry();
+	void readData_parameters();
 	//for outout files
 	void outputData(); //sigma, v and time_scale
 	void coordinate();
@@ -67,17 +65,20 @@ private:
 	realval hx;
 	realval hz;
 	realval tau;
-	char path1[150]="Data/";
+	char path1[150]="";
+	char path_data[150] = "test_homogeneous/Data/";
+	char path[150] = "test_homogeneous/";
 	char FullPath[150];
 
 private:
 	//from input files
-	realval *rho; //centres
-	realval *Vp;
-	realval *Vs;
-	//unknown yet
-	realval *lam;
-	realval *mu;
+	realval* rho_x; //average density by x
+	realval* rho_z; //by z
+	realval* c11;
+	realval* c13;
+	realval* c33;
+	realval* c55_xz;
+
 	realval *sigma_xx;					// нормальное напряжение упругого материала по x
 	realval *sigma_zz ;					// нормальное напряжение упругого материала по z
 	realval *sigma_xz;		// касательное напряжение упругого материала
@@ -85,20 +86,25 @@ private:
 	realval *v_z;
 
 	//for viscoelasticity 
-	realval** R_xx_old;//memory variables
+	/*realval** R_xx_old;//memory variables
 	realval** R_zz_old;
-	realval** R_xz_old;
+	realval** R_xz_old;*/
+	std::vector<realval>*R_xx_old;
+	std::vector<realval>*R_zz_old;
+	std::vector<realval>*R_xz_old;
 
-	realval** R_xx_new;//memory variables
+	/*realval** R_xx_new;//memory variables
 	realval** R_zz_new;
-	realval** R_xz_new;
-	//from unput files
-	realval tau_sigma;
-	realval* tau_11;
-	realval* tau_13;
-	realval* tau_33;
-	realval* tau_55;
+	realval** R_xz_new;*/
+	std::vector<realval>*R_xx_new;
+	std::vector<realval>*R_zz_new;
+	std::vector<realval>*R_xz_new;
 
+	realval tau_sigma;
+	realval* tau11;
+	realval* tau13;
+	realval* tau33;
+	realval* tau55_xz;
 
 	//coordinate of source
 	realval *src;
