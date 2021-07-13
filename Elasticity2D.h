@@ -66,8 +66,8 @@ private:
 	realval hz;
 	realval tau;
 	char path1[150]="";
-	char path_data[150] = "test_homogeneous/Data/";
-	char path[150] = "test_homogeneous/";
+	char path_data[150] = "homo_10kHz/Data/";
+	char path[150] = "homo_10kHz/";
 	char FullPath[150];
 
 private:

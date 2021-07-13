@@ -63,6 +63,7 @@ Elasticity2D::Elasticity2D()
 	rx = tau / hx;
 	rz = tau / hz;
 
+
 	//for rendering (output)
 	coordinate();
 
@@ -136,13 +137,13 @@ Elasticity2D::~Elasticity2D()
 	delete[] c33;
 	delete[] c55_xz;
 
-	delete[]R_xx_old;//memory variables
+	/*delete[]R_xx_old;//memory variables
 	delete[]R_zz_old;
 	delete[]R_xz_old;
 
 	delete[]R_xx_new;//memory variables
 	delete[]R_zz_new;
-	delete[] R_xz_new;
+	delete[] R_xz_new;*/
 	
 	delete[] tau11;
 	delete[] tau13;
@@ -599,13 +600,19 @@ void Elasticity2D::Elasticity()
 	//time_scale output 
 	ofstream time_scale_vel;
 	strcpy_s(path1, sizeof(path1), "time_scale_vel.bin"); // �� ��� MPI 
-	time_scale_vel.open(path1, ios::binary | ios::out);
+	strcpy_s(FullPath, strlen(FullPath) + strlen(path) + 1, path);
+	strcat_s(FullPath, strlen(FullPath) + strlen(path1) + 1, path1);
+	time_scale_vel.open(FullPath, ios::binary | ios::out);
+
+	time_scale_vel.write((char*)&cur_time, sizeof rx);
 
 	ofstream time_scale_str;
 	strcpy_s(path1, sizeof(path1), "time_scale_str.bin"); // �� ��� MPI 
-	time_scale_str.open(path1, ios::binary | ios::out);
+	strcpy_s(FullPath, strlen(FullPath) + strlen(path) + 1, path);
+	strcat_s(FullPath, strlen(FullPath) + strlen(path1) + 1, path1);
+	time_scale_str.open(FullPath, ios::binary | ios::out);
 
-	time_scale_vel.write((char*)&cur_time, sizeof rx);
+	
 	time_scale_str.write((char*)&cur_time_str, sizeof rx);
 
 	//zero step data output 
@@ -616,44 +623,64 @@ void Elasticity2D::Elasticity()
 	//first receiver 
 	ofstream v_x_rec_1;
 	strcpy_s(path1, sizeof(path1), "v_x_rec_1.bin"); // �� ��� MPI 
-	v_x_rec_1.open(path1, ios::binary | ios::out);
+	strcpy_s(FullPath, strlen(FullPath) + strlen(path_data) + 1, path_data);
+	strcat_s(FullPath, strlen(FullPath) + strlen(path1) + 1, path1);
+	v_x_rec_1.open(FullPath, ios::binary | ios::out);
 
 	ofstream v_z_rec_1;
 	strcpy_s(path1, sizeof(path1), "v_z_rec_1.bin"); // �� ��� MPI 
-	v_z_rec_1.open(path1, ios::binary | ios::out);
+	strcpy_s(FullPath, strlen(FullPath) + strlen(path_data) + 1, path_data);
+	strcat_s(FullPath, strlen(FullPath) + strlen(path1) + 1, path1);
+	v_z_rec_1.open(FullPath, ios::binary | ios::out);
 
 	ofstream sigma_xx_rec_1;
 	strcpy_s(path1, sizeof(path1), "sigma_xx_rec_1.bin"); // �� ��� MPI 
-	sigma_xx_rec_1.open(path1, ios::binary | ios::out);
+	strcpy_s(FullPath, strlen(FullPath) + strlen(path_data) + 1, path_data);
+	strcat_s(FullPath, strlen(FullPath) + strlen(path1) + 1, path1);
+	sigma_xx_rec_1.open(FullPath, ios::binary | ios::out);
 
 	ofstream sigma_zz_rec_1;
 	strcpy_s(path1, sizeof(path1), "sigma_zz_rec_1.bin"); // �� ��� MPI 
-	sigma_zz_rec_1.open(path1, ios::binary | ios::out);
+	strcpy_s(FullPath, strlen(FullPath) + strlen(path_data) + 1, path_data);
+	strcat_s(FullPath, strlen(FullPath) + strlen(path1) + 1, path1);
+	sigma_zz_rec_1.open(FullPath, ios::binary | ios::out);
 
 	ofstream sigma_xz_rec_1;
 	strcpy_s(path1, sizeof(path1), "sigma_xz_rec_1.bin"); // �� ��� MPI 
-	sigma_xz_rec_1.open(path1, ios::binary | ios::out);
+	strcpy_s(FullPath, strlen(FullPath) + strlen(path_data) + 1, path_data);
+	strcat_s(FullPath, strlen(FullPath) + strlen(path1) + 1, path1);
+	sigma_xz_rec_1.open(FullPath, ios::binary | ios::out);
 
 	//second receiver 
 	ofstream v_x_rec_2;
 	strcpy_s(path1, sizeof(path1), "v_x_rec_2.bin"); // �� ��� MPI 
-	v_x_rec_2.open(path1, ios::binary | ios::out);
+	strcpy_s(FullPath, strlen(FullPath) + strlen(path_data) + 1, path_data);
+	strcat_s(FullPath, strlen(FullPath) + strlen(path1) + 1, path1);
+	v_x_rec_2.open(FullPath, ios::binary | ios::out);
 
 	ofstream v_z_rec_2;
 	strcpy_s(path1, sizeof(path1), "v_z_rec_2.bin"); // �� ��� MPI 
-	v_z_rec_2.open(path1, ios::binary | ios::out);
+	strcpy_s(FullPath, strlen(FullPath) + strlen(path_data) + 1, path_data);
+	strcat_s(FullPath, strlen(FullPath) + strlen(path1) + 1, path1);
+	v_z_rec_2.open(FullPath, ios::binary | ios::out);
 
 	ofstream sigma_xx_rec_2;
 	strcpy_s(path1, sizeof(path1), "sigma_xx_rec_2.bin"); // �� ��� MPI 
-	sigma_xx_rec_2.open(path1, ios::binary | ios::out);
+	strcpy_s(FullPath, strlen(FullPath) + strlen(path_data) + 1, path_data);
+	strcat_s(FullPath, strlen(FullPath) + strlen(path1) + 1, path1);
+	sigma_xx_rec_2.open(FullPath, ios::binary | ios::out);
 
 	ofstream sigma_zz_rec_2;
 	strcpy_s(path1, sizeof(path1), "sigma_zz_rec_2.bin"); // �� ��� MPI 
-	sigma_zz_rec_2.open(path1, ios::binary | ios::out);
+	strcpy_s(FullPath, strlen(FullPath) + strlen(path_data) + 1, path_data);
+	strcat_s(FullPath, strlen(FullPath) + strlen(path1) + 1, path1);
+	sigma_zz_rec_2.open(FullPath, ios::binary | ios::out);
 
 	ofstream sigma_xz_rec_2;
 	strcpy_s(path1, sizeof(path1), "sigma_xz_rec_2.bin"); // �� ��� MPI 
-	sigma_xz_rec_2.open(path1, ios::binary | ios::out);
+	strcpy_s(FullPath, strlen(FullPath) + strlen(path_data) + 1, path_data);
+	strcat_s(FullPath, strlen(FullPath) + strlen(path1) + 1, path1);
+	sigma_xz_rec_2.open(FullPath, ios::binary | ios::out);
 
 	if (inpData.v_x_rec == 1)
 	{
