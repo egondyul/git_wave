@@ -919,7 +919,7 @@ void Elasticity2D::Elasticity()
 				for (i = 0; i < Nx - 1; i++)
 				{
 					j = 0;
-					tmp = rz * (1 / rho_x[j*(Nx - 1) + i])*(1 / sqrt(rho_x[j*(Nx - 1) + i] * c55_xz[j*(Nx - 1) + i]));
+					tmp = rz * (1 / rho_x[j*(Nx - 1) + i])*(sqrt(rho_x[j*(Nx - 1) + i] * c55_xz[j*(Nx - 1) + i]));
 					v_x[j*(Nx - 1) + i] = (1 / (1 + tmp))*((1 - tmp)*v_x[j*(Nx - 1) + i] + (1 / rho_x[j*(Nx - 1) + i])*rz * 2 * sigma_xz[j*(Nx - 1) + i] + (1 / rho_x[j*(Nx - 1) + i])*rx*(sigma_xx[j*Nx + i + 1] - sigma_xx[j*Nx + i]));
 				}
 		}
@@ -945,8 +945,8 @@ void Elasticity2D::Elasticity()
 				for (i = 0; i < Nx - 1; i++)
 				{
 					j = Nz - 1;
-					tmp = (1 / rho_x[j*(Nx - 1) + i])*rz*(1 / sqrt(rho_x[j*(Nx - 1) + i] * c55_xz[(j-1)*(Nx - 1) + i]));
-					v_x[j*(Nx - 1) + i] = (1 / (1 + tmp))*((1 - tmp)*v_x[j*(Nx - 1) + i] - (1 / rho_x[j*(Nx - 1) + i] * c55_xz[j*(Nx - 1) + i]) * 2 * sigma_xz[(j - 1)*(Nx - 1) + i] + (1 / rho_x[j*(Nx - 1) + i]) * (rx*(sigma_xx[j*Nx + i + 1] - sigma_xx[j*Nx + i])));
+					tmp = (1 / rho_x[j*(Nx - 1) + i])*rz*(sqrt(rho_x[j*(Nx - 1) + i] * c55_xz[(j-1)*(Nx - 1) + i]));
+					v_x[j*(Nx - 1) + i] = (1 / (1 + tmp))*((1 - tmp)*v_x[j*(Nx - 1) + i] - (1 / rho_x[j*(Nx - 1) + i])*rz * 2 * sigma_xz[(j - 1)*(Nx - 1) + i] + (1 / rho_x[j*(Nx - 1) + i]) * (rx*(sigma_xx[j*Nx + i + 1] - sigma_xx[j*Nx + i])));
 				}
 		}
 
