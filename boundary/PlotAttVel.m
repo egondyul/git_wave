@@ -65,17 +65,27 @@ for j=1:NFreq
         TicksTrace(i,1)=max(abs(Trace1))*i*1.5; % remember ticks for traces plot
     
         %% Distinguish the signals - initial, transmitted and reflected
-        [M,MaxInd1] = max(abs(Trace1)); % indeces where maximal amplitude is reached for 1st and 2nd traces
+%        [M,MaxInd1] = max(abs(Trace1)); % indeces where maximal amplitude is reached for 1st and 2nd traces
         [M,MaxInd2] = max(abs(Trace2));
 %         TravelTime = Time(MaxInd2) - Time(MaxInd1); % time spent by the wave to travel from receiver line 1 to receiver line 2
 %         EffVel = RecDist/TravelTime; % Effective velocity of the wave between receiver lines
-        
+
+     % distinguish the initial signal
+         TravelTime=abs(out(j,i).rec1-out(j,i).src)/out(j,i).Vp+3/out(j,i).freq;
+        [M,IndTravelTime]=min(abs(Time-TravelTime));
+         Alph=2; %2 period that grab the region
+         InitSignal=Trace1(IndTravelTime-floor(Alph/Nu0/Dt):min(IndTravelTime + floor(Alph/Nu0/Dt), length(Trace1)));
+         InitTime = Time(IndTravelTime - floor(Alph/Nu0/Dt):min(IndTravelTime + floor(Alph/Nu0/Dt), length(Trace1)));
+%
         % distinguish the initial signal
-        Alph = 2; % number of periods, which we want to leave from the amplitude (minimal - 0.5)
-        InitSignal = Trace1(MaxInd1 - floor(Alph/Nu0/Dt):min(MaxInd1 + floor(Alph/Nu0/Dt), length(Trace1)));
-        InitTime = Time(MaxInd1 - floor(Alph/Nu0/Dt):min(MaxInd1 + floor(Alph/Nu0/Dt), length(Trace1)));
-        
+%         Alph = 2; % number of periods, which we want to leave from the amplitude (minimal - 0.5)
+%         InitSignal = Trace1(MaxInd1 - floor(Alph/Nu0/Dt):min(MaxInd1 + floor(Alph/Nu0/Dt), length(Trace1)));
+%         InitTime = Time(MaxInd1 - floor(Alph/Nu0/Dt):min(MaxInd1 + floor(Alph/Nu0/Dt), length(Trace1)));
+% %         
+
         % distinguish the transmitted signal
+%         TranlTime=abs(out(j,i).rec2-out(j,i).src)/out(j,i).Vp+3/out(j,i).freq;
+%         [M,IndTranTime]=min(abs(Time-TranlTime));
         Alph = 2;
         TranSignal = Trace2(MaxInd2 - floor(Alph/Nu0/Dt):min(MaxInd2 + floor(Alph/Nu0/Dt), length(Trace2)));
         TranTime = Time(MaxInd2 - floor(Alph/Nu0/Dt):min(MaxInd2 + floor(Alph/Nu0/Dt), length(Trace2)));      
@@ -84,12 +94,15 @@ for j=1:NFreq
         Alph = 2;
 %         src = out(j,i).src; % coordinate of the source line (in meters) - for new mat-files
 %         RefToRecTime = 3/Nu0 + (out(j,i).interface - 2*src + out(j,i).rec1)/out(j,i).Vp;
-        RefToRecTime = 3/Nu0/2 + ((out(j,i).interface - out(j,i).src) + (out(j,i).interface - out(j,i).rec1))/out(j,i).Vp;
+        RefToRecTime = 3/Nu0 + ((out(j,i).interface - out(j,i).src) + (out(j,i).interface - out(j,i).rec1))/out(j,i).Vp;
+        [M,IndRefTime]=min(abs(Time-RefToRecTime));
+        RefSignal=Trace1(IndRefTime-floor(Alph/Nu0/Dt):min(IndRefTime + floor(Alph/Nu0/Dt), length(Trace1)));
+        RefTime = Time(IndRefTime - floor(Alph/Nu0/Dt):min(IndRefTime + floor(Alph/Nu0/Dt), length(Trace1)));
 %         [MM,MMax] = abs(Time - RefToRecTime);
-        [M,MaxIndRef] = max(abs(Trace1(min(MaxInd1 + floor(Alph/Nu0/Dt), length(Trace1)):length(Trace1))));
-        MaxIndRef = MaxIndRef + length(1:min(MaxInd1 + floor(Alph/Nu0/Dt), length(Trace1)));
-        RefSignal = Trace1(MaxIndRef - floor(Alph/Nu0/Dt):min(MaxIndRef + floor(Alph/Nu0/Dt),length(Trace1)));
-        RefTime = Time(MaxIndRef - floor(Alph/Nu0/Dt):min(MaxIndRef + floor(Alph/Nu0/Dt),length(Trace1)));        
+%         [M,MaxIndRef] = max(abs(Trace1(min(MaxInd1 + floor(Alph/Nu0/Dt), length(Trace1)):length(Trace1))));
+%         MaxIndRef = MaxIndRef + length(1:min(MaxInd1 + floor(Alph/Nu0/Dt), length(Trace1)));
+%         RefSignal = Trace1(MaxIndRef - floor(Alph/Nu0/Dt):min(MaxIndRef + floor(Alph/Nu0/Dt),length(Trace1)));
+%         RefTime = Time(MaxIndRef - floor(Alph/Nu0/Dt):min(MaxIndRef + floor(Alph/Nu0/Dt),length(Trace1)));        
                 
         %% Estimation of the velocity and attenuation
         % main function for signal deconvolution

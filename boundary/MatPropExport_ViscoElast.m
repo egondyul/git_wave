@@ -4,8 +4,9 @@ az = Nx*(Nz-1);
 axz = (Nx-1)*(Nz-1);
 nn = Nx*Nz
 %% properties (1 - background, 2 - fractures)
- tau_sigma = 0;%10^(-2)/(4*pi*Frequency)
-
+ tau_sigma = 10^(-2)/(4*pi*Frequency)
+nu=0.001;%2.8*10^(-4);
+tau0=nu*(4*pi*Frequency)/(10^(-2))
 % background
 rho(1) = 2500;
 c11(1) = 4*10^9;
@@ -20,15 +21,15 @@ tau13(1) = 0;%10^(-10);
 Vp=sqrt(c11(1)/rho(1));
 
 %fractures
-rho(2) = 2300;
+rho(2) = 1000;
 c11(2) = 2*10^9;
 c33(2) = 2*10^9;
-c55(2) = 0.5*10^9;
-c13(2) = 1*10^9;
-tau11(2) = 0;%10^(-11);
-tau33(2) = 0;%10^(-11);
-tau55(2) = 0;%10^(-11);
-tau13(2) = 0;%10^(-11);
+c55(2) = 0;%0.5*10^9;
+c13(2) = 2*10^9;
+tau11(2) = tau0;
+tau33(2)=tau0;
+tau55(2) = tau0;
+tau13(2) = 0;
 
 
 %% save files
@@ -84,25 +85,46 @@ fclose(F);
 param = c55;
 param_model = (1-AAA).*ones(1,nn)*param(1) + AAA.*ones(1,nn)*param(2);
 param_model = reshape(param_model,Nx,Nz);
-param_averZ=zeros(Nx,Nz-1);
+param_aver=zeros(Nx-1,Nz-1);
 for i=1:Nz-1
-   for j=1:Nx
-      tmp1=param_model(j,i); 
-      tmp2=param_model(j,i+1);
-      if(tmp1~=0&&tmp2~=0)
-         param_averZ(j,i)=1/tmp1+1/tmp2; 
-      end
-   end
+    for j=1:Nx-1
+        tmp1=param_model(j,i);
+        tmp2=param_model(j+1,i);
+        tmp3=param_model(j,i+1);
+        tmp4=param_model(j+1,i+1);
+        if(tmp1~=0&&tmp2~=0&&tmp3~=0&&tmp4~=0)
+            param_aver(j,i)=1/tmp1+1/tmp2+1/tmp3+1/tmp4;
+        end
+    end
 end
 param_averXz=zeros(Nx-1,Nz-1);
 for i=1:Nz-1
-   for j=1:Nx-1
-       tmp1=param_averZ(j,i);
-       tmp2=param_averZ(j+1,i);
-      param_averXz(j,i)= 1/tmp1+1/tmp2;
-   end
+    for j=1:Nx-1
+        if(param_aver(j,i)~=0)
+            param_averXz(j,i)=4/param_aver(j,i);
+        end
+    end
 end
-param_averXz=4./param_averXz;
+
+% param_averZ=zeros(Nx,Nz-1);
+% for i=1:Nz-1
+%    for j=1:Nx
+%       tmp1=param_model(j,i); 
+%       tmp2=param_model(j,i+1);
+%       if(tmp1~=0&&tmp2~=0)
+%          param_averZ(j,i)=1/tmp1+1/tmp2; 
+%       end
+%    end
+% end
+% param_averXz=zeros(Nx-1,Nz-1);
+% for i=1:Nz-1
+%    for j=1:Nx-1
+%        tmp1=param_averZ(j,i);
+%        tmp2=param_averZ(j+1,i);
+%       param_averXz(j,i)= 1/tmp1+1/tmp2;
+%    end
+% end
+% param_averXz=4./param_averXz;
 
 F = fopen([folder 'c55_xz.bin'],'w');
 axz = (Nx-1)*(Nz-1);
@@ -112,25 +134,46 @@ fclose(F);
 param = tau55;
 param_model = (1-AAA).*ones(1,nn)*param(1) + AAA.*ones(1,nn)*param(2);
 param_model = reshape(param_model,Nx,Nz);
-param_averZ=zeros(Nx,Nz-1);
+param_aver=zeros(Nx-1,Nz-1);
 for i=1:Nz-1
-   for j=1:Nx
-      tmp1=param_model(j,i); 
-      tmp2=param_model(j,i+1);
-      if(tmp1~=0&&tmp2~=0)
-         param_averZ(j,i)=1/tmp1+1/tmp2; 
-      end
-   end
+    for j=1:Nx-1
+        tmp1=param_model(j,i);
+        tmp2=param_model(j+1,i);
+        tmp3=param_model(j,i+1);
+        tmp4=param_model(j+1,i+1);
+        if(tmp1~=0&&tmp2~=0&&tmp3~=0&&tmp4~=0)
+            param_aver(j,i)=1/tmp1+1/tmp2+1/tmp3+1/tmp4;
+        end
+    end
 end
 param_averXz=zeros(Nx-1,Nz-1);
 for i=1:Nz-1
-   for j=1:Nx-1
-       tmp1=param_averZ(j,i);
-       tmp2=param_averZ(j+1,i);
-      param_averXz(j,i)= 1/tmp1+1/tmp2;
-   end
+    for j=1:Nx-1
+        if(param_aver(j,i)~=0)
+            param_averXz(j,i)=4/param_aver(j,i);
+        end
+    end
 end
-param_averXz=4./param_averXz;
+
+% param_averZ=zeros(Nx,Nz-1);
+% for i=1:Nz-1
+%    for j=1:Nx
+%       tmp1=param_model(j,i); 
+%       tmp2=param_model(j,i+1);
+%       if(tmp1~=0&&tmp2~=0)
+%          param_averZ(j,i)=1/tmp1+1/tmp2; 
+%       end
+%    end
+% end
+% param_averXz=zeros(Nx-1,Nz-1);
+% for i=1:Nz-1
+%    for j=1:Nx-1
+%        tmp1=param_averZ(j,i);
+%        tmp2=param_averZ(j+1,i);
+%       param_averXz(j,i)= 1/tmp1+1/tmp2;
+%    end
+% end
+% param_averXz=4./param_averXz;
 
 F = fopen([folder 'tau55_xz.bin'],'w');
 axz = (Nx-1)*(Nz-1);

@@ -1,6 +1,6 @@
 function FracCaseMatExport
 freq=10000;%really start frequency
-dfreq=10000;
+dfreq=20000;
 
 for i=1:1 %session
     for j=1:2 %cases

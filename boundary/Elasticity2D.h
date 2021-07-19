@@ -66,8 +66,8 @@ private:
 	realval hz;
 	realval tau;
 	char path1[150] = "";
-	char path_data[150] = "1/2/20000/Data/";
-	char path[150] = "1/2/20000/";
+	char path_data[150] = "2/2/30000/Data/";
+	char path[150] = "2/2/30000/";
 	char FullPath[150];
 
 private:
