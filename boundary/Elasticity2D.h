@@ -66,8 +66,8 @@ private:
 	realval hz;
 	realval tau;
 	char path1[150] = "";
-	char path_data[150] = "2/2/30000/Data/";
-	char path[150] = "2/2/30000/";
+	char path_data[150] = "1/2/10000/Data/";
+	char path[150] = "1/2/10000/";
 	char FullPath[150];
 
 private:
@@ -86,25 +86,25 @@ private:
 	realval *v_z;
 
 	//for viscoelasticity 
-	/*realval** R_xx_old;//memory variables
-	realval** R_zz_old;
-	realval** R_xz_old;*/
-	std::vector<realval>*R_xx_old;
+	/*std::vector<realval>*R_xx_old;
 	std::vector<realval>*R_zz_old;
 	std::vector<realval>*R_xz_old;
 
-	/*realval** R_xx_new;//memory variables
-	realval** R_zz_new;
-	realval** R_xz_new;*/
 	std::vector<realval>*R_xx_new;
 	std::vector<realval>*R_zz_new;
-	std::vector<realval>*R_xz_new;
+	std::vector<realval>*R_xz_new;*/
+
+	realval rr, rrxx, rrzz, rrxz;
+	realval aa, bbb, ccc;
+	realval*Rxx;
+	realval*Rzz;
+	realval*Rxz;
 
 	realval tau_sigma;
-	realval* tau11;
-	realval* tau13;
-	realval* tau33;
-	realval* tau55_xz;
+	realval *tau11;
+	realval *tau13;
+	realval *tau33;
+	realval *tau55_xz;
 
 	//coordinate of source
 	realval *src;

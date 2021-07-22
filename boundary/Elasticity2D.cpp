@@ -7,6 +7,7 @@ Elasticity2D::Elasticity2D()
 	//initializing geometry 
 	readData_geometry(); //Nx,Nz, hx, hz, tau, ...
 
+
 	//memory alloc
 	rho_x = new realval[(Nx - 1)*Nz];
 	rho_z = new realval[Nx*(Nz - 1)];
@@ -22,60 +23,42 @@ Elasticity2D::Elasticity2D()
 	c33 = new realval[Nx*Nz];
 	c55_xz = new realval[(Nx - 1)*(Nz - 1)];
 
-	/*c11.resize(Nx*Nz);
-	c13.resize(Nx*Nz);
-	c33.resize(Nx*Nz);
-	c55_xz.resize((Nx-1)*(Nz-1));*/
-
 
 	//for viscoelasticity
-	/*R_xx_old = new realval*[Nx*Nz];
-	R_zz_old = new realval*[Nx*Nz];
-	R_xz_old = new realval*[(Nx-1)*(Nz-1)];
-
-	R_xx_new = new realval*[Nx*Nz];
-	R_zz_new = new realval*[Nx*Nz];
-	R_xz_new = new realval*[(Nx - 1)*(Nz - 1)];*/
-
+	/*R_xx_new = new std::vector<realval>;
+	(*R_xx_new).resize(Nx*Nz);
 	R_xx_old = new std::vector<realval>;
 	(*R_xx_old).resize(Nx*Nz);
-	R_zz_old = new std::vector<realval>;
-	(*R_zz_old).resize(Nx*Nz);
-	R_xx_new = new std::vector<realval>;
-	(*R_xx_new).resize(Nx*Nz);
 	R_zz_new = new std::vector<realval>;
 	(*R_zz_new).resize(Nx*Nz);
-	R_xz_old = new std::vector<realval>;
-	(*R_xz_old).resize((Nx - 1)*(Nz - 1));
+	R_zz_old = new std::vector<realval>;
+	(*R_zz_old).resize(Nx*Nz);
 	R_xz_new = new std::vector<realval>;
-	(*R_xz_new).resize((Nx - 1)*(Nz - 1));
+	(*R_xz_new).resize((Nx-1)*(Nz-1));
+	R_xz_old = new std::vector<realval>;
+	(*R_xz_old).resize((Nx-1)*(Nz-1));*/
 
-	for (j = 0; j < Nz; j++)
-	{
-		for (i = 0; i < Nx; i++)
-		{
-			(*R_xx_old)[j*Nx + i] = 0.0;
-			(*R_xx_new)[j*Nx + i] = 0.0;
-			(*R_zz_old)[j*Nx + i] = 0.0;
-			(*R_zz_new)[j*Nx + i] = 0.0;
-		}
-	}
+	Rxx = new realval[Nx*Nz];
+	Rzz = new realval[Nx*Nz];
+	Rxz = new realval[(Nx - 1)*(Nz - 1)];
 
-	for (j = 0; j < Nz-1; j++)
-	{
-		for (i = 0; i < Nx-1; i++)
-		{
-			(*R_xz_old)[j*(Nx-1) + i] = 0.0;
-			(*R_xz_new)[j*(Nx-1) + i] = 0.0;
-		}
-	}
-	ofstream fileR;
+	/*ofstream fileR;
 	strcpy_s(path1, sizeof(path1), "R_xz_"); // не для MPI
 
-	filename(path_data, path1, 0, FullPath);
-	fileR.open(FullPath, ios::binary | ios::out);                  // не для MPI
-	fileR.write((char*)(R_xz_new), (sizeof(rx)*(Nx - 1)*(Nz - 1)));
-	fileR.close();
+	std::ofstream outphi;
+	outphi.open("R_xz_" + std::to_string(0) + ".txt");
+	if (outphi.is_open())
+	{
+		for (int it = 0; it < Nz-1; it++)
+		{
+			for (int jt = 0; jt < Nx-1; jt++)
+			{
+				outphi << (*R_xz_new)[it*(Nx-1)+jt] << " ";
+			}
+			outphi << std::endl;
+		}
+	}
+	outphi.close();*/
 
 
 	tau11 = new realval[Nx*Nz];
@@ -91,6 +74,9 @@ Elasticity2D::Elasticity2D()
 	rx = tau / hx;
 	rz = tau / hz;
 
+	aa = tau_sigma / tau;
+	bbb = (2 * aa - 1) / (2 * aa + 1);
+	ccc = 1 / ((aa + 0.5)*tau);
 
 	//for rendering (output)
 	coordinate();
@@ -108,6 +94,8 @@ Elasticity2D::Elasticity2D()
 				sigma_xx[j*Nx + i] = 0;
 				sigma_zz[j*Nx + i] = 0;
 				src[j*Nx + i] = 0;
+				Rxx[j*Nx + i] = 0;
+				Rzz[j*Nx + i] = 0;
 				if (i < Nx - 1)
 				{
 					v_x[j*(Nx - 1) + i] = 0;
@@ -119,6 +107,7 @@ Elasticity2D::Elasticity2D()
 				if ((j < Nz - 1) && (i < Nx - 1))
 				{
 					sigma_xz[j*(Nx - 1) + i] = 0;
+					Rxz[j*(Nx - 1) + i] = 0;
 				}
 			}
 		}
@@ -150,7 +139,6 @@ Elasticity2D::Elasticity2D()
 
 Elasticity2D::~Elasticity2D()
 {
-
 	delete[]sigma_xx;
 	delete[]sigma_xz;
 	delete[]sigma_zz;
@@ -165,18 +153,14 @@ Elasticity2D::~Elasticity2D()
 	delete[] c33;
 	delete[] c55_xz;
 
-	/*delete[]R_xx_old;//memory variables
-	delete[]R_zz_old;
-	delete[]R_xz_old;
-
-	delete[]R_xx_new;//memory variables
-	delete[]R_zz_new;
-	delete[] R_xz_new;*/
-
 	delete[] tau11;
 	delete[] tau13;
 	delete[] tau33;
 	delete[] tau55_xz;
+
+	delete[]Rxx;
+	delete[]Rzz;
+	delete[]Rxz;
 }
 
 void Elasticity2D::readData_geometry()
@@ -620,13 +604,24 @@ void Elasticity2D::outputData()
 			sigma_xz_res.close();
 		}
 
-		ofstream fileR;
-		strcpy_s(path1, sizeof(path1), "R_xz_"); // не для MPI
 
-		filename(path_data, path1, counter, FullPath);
-		fileR.open(FullPath, ios::binary | ios::out);                  // не для MPI
-		fileR.write((char*)(R_xz_new), (sizeof(rx)*(Nx-1)*(Nz-1)));
-		fileR.close();
+		ofstream fileR;
+		strcpy_s(path1, sizeof(path1), "R_zz_"); // не для MPI
+
+		std::ofstream outphi;
+		outphi.open("R_zz_" + std::to_string(counter) + ".txt");
+		if (outphi.is_open())
+		{
+			for (int it = 0; it < Nz - 1; it++)
+			{
+				for (int jt = 0; jt < Nx - 1; jt++)
+				{
+					outphi << Rzz[it*(Nx - 1) + jt] << " ";
+				}
+				outphi << std::endl;
+			}
+		}
+		outphi.close();
 
 		counter = counter + 1;
 	}
@@ -770,21 +765,11 @@ void Elasticity2D::Elasticity()
 	realval f_src, c1, c2, c3, c4;
 	realval tmp;
 
+	std::vector<realval>* swap;
+
 	while (cur_time < inpData.Time)
 	{
-		cur_time_str = cur_time + 0.5*tau;
-		cur_time = cur_time + tau;
-
-		time_scale_vel.write((char*)&cur_time, sizeof rx);
-		time_scale_str.write((char*)&cur_time_str, sizeof rx);
-
-		//memory variables 
-		/*realval** swap;
-		swap = R_xx_new;
-		R_xx_new = R_xx_old;
-		R_xx_old = swap;*/
-		std::vector<realval>* swap;
-		swap = R_xx_new;
+		/*swap = R_xx_new;
 		R_xx_new = R_xx_old;
 		R_xx_old = swap;
 
@@ -794,40 +779,42 @@ void Elasticity2D::Elasticity()
 
 		swap = R_xz_new;
 		R_xz_new = R_xz_old;
-		R_xz_old = swap;
+		R_xz_old = swap;*/
 
+		cur_time_str = cur_time + 0.5*tau;
+		cur_time = cur_time + tau;
 
-#pragma omp parallel 
+		time_scale_vel.write((char*)&cur_time, sizeof rx);
+		time_scale_str.write((char*)&cur_time_str, sizeof rx);
+
+		// Without PML 
+		//-----------memory variables------------//
+/*#pragma omp parallel 
 		{
 #pragma omp for private(i,j) schedule(guided) 
 			for (j = 1; j < Nz - 1; j++)
 			{
 				for (i = 1; i < Nx - 1; i++)
 				{
-					(*R_xx_new)[j*Nx + i] = (1 / (tau_sigma + tau / 2))*((tau_sigma - tau / 2)*(*R_xx_old)[j*Nx + i] - tau11[j*Nx + i] * rx*(v_x[j*(Nx - 1) + i] - v_x[j*(Nx - 1) + i - 1]) - tau13[j*Nx + i] * rz* (v_z[j*Nx + i] - v_z[(j - 1)*Nx + i]));
-					//(*R_xx_new)[j*Nx + i] = (1 / (2 * tau_sigma + tau))*(2 * tau_sigma* (*R_xx_old)[j*Nx + i] - tau * (*R_xx_old)[j*Nx + i] - tau11[j*Nx + i] * 2 * rx*(v_x[j*(Nx - 1) + i] - v_x[j*(Nx - 1) + i - 1]) - tau13[j*Nx + i] * 2 * rz* (v_z[j*Nx + i] - v_z[(j - 1)*Nx + i]));
-					(*R_zz_new)[j*Nx + i] = (1 / (tau_sigma + tau / 2))*((tau_sigma - tau / 2)*(*R_zz_old)[j*Nx + i] - tau13[j*Nx + i] * rx*(v_x[j*(Nx - 1) + i] - v_x[j*(Nx - 1) + i - 1]) - tau33[j*Nx + i] * rz* (v_z[j*Nx + i] - v_z[(j - 1)*Nx + i]));
-					//(*R_zz_new)[j*Nx + i] = (1 / (2 * tau_sigma + tau))*(2 * tau_sigma* (*R_zz_old)[j*Nx + i] - tau * (*R_zz_old)[j*Nx + i] - tau13[j*Nx + i] * 2 * rx*(v_x[j*(Nx - 1) + i] - v_x[j*(Nx - 1) + i - 1]) - tau33[j*Nx + i] * 2 * rz* (v_z[j*Nx + i] - v_z[(j - 1)*Nx + i]));
-
+					(*R_xx_new)[j*Nx + i] = (1.0 / (tau_sigma + tau * 0.5))*((tau_sigma - 0.5*tau)*(*R_xx_old)[j*Nx + i] - tau11[j*Nx + i] * rx*(v_x[j*(Nx - 1) + i] - v_x[j*(Nx - 1) + (i - 1)]) - tau13[j*Nx + i] * rz*(v_z[j*Nx + i] - v_z[(j - 1)*Nx + i]));
+					(*R_zz_new)[j*Nx + i] = (1.0 / (tau_sigma + tau * 0.5))*((tau_sigma - 0.5*tau)*(*R_zz_old)[j*Nx + i] - tau13[j*Nx + i] * rx*(v_x[j*(Nx - 1) + i] - v_x[j*(Nx - 1) + (i - 1)]) - tau33[j*Nx + i] * rz*(v_z[j*Nx + i] - v_z[(j - 1)*Nx + i]));
 				}
 			}
 		}
-		//periodic condition 
+		//we don't care about boundary condition except periodic on top wall
 #pragma omp parallel 
 		{
-#pragma omp for private(j) schedule(guided) 
+#pragma omp for private(j,f_src) schedule(guided) 
 			for (j = 1; j < Nz - 1; j++)
 			{
-				(*R_xx_new)[j*Nx] = (1 / (tau_sigma + tau / 2))*((tau_sigma - tau / 2)*(*R_xx_old)[j*Nx] - tau11[j*Nx] * rx*(v_x[j*(Nx - 1)] - v_x[j*(Nx - 1) + (Nx-2)]) - tau13[j*Nx] * rz* (v_z[j*Nx] - v_z[(j - 1)*Nx]));
-				(*R_zz_new)[j*Nx] = (1 / (tau_sigma + tau / 2))*((tau_sigma - tau / 2)*(*R_zz_old)[j*Nx] - tau13[j*Nx] * rx*(v_x[j*(Nx - 1)] - v_x[j*(Nx - 1) + (Nx-2)]) - tau33[j*Nx] * rz* (v_z[j*Nx] - v_z[(j - 1)*Nx]));
+				(*R_xx_new)[j*Nx] = (1.0 / (tau_sigma + tau * 0.5))*((tau_sigma - 0.5*tau)*(*R_xx_old)[j*Nx] - tau11[j*Nx] * rx*(v_x[j*(Nx - 1)] - v_x[j*(Nx - 1) + (Nx-2)]) - tau13[j*Nx] * rz*(v_z[j*Nx] - v_z[(j - 1)*Nx]));
+				(*R_zz_new)[j*Nx] = (1 / (tau_sigma + tau * 0.5))*((tau_sigma - 0.5*tau)*(*R_zz_old)[j*Nx] - tau13[j*Nx] * rx*(v_x[j*(Nx - 1)] - v_x[j*(Nx - 1) + (Nx-2)]) - tau33[j*Nx] * rz*(v_z[j*Nx] - v_z[(j - 1)*Nx]));
 
-				//(*R_xx_new)[j*Nx] = (1 / (2 * tau_sigma + tau))*(2 * tau_sigma* (*R_xx_old)[j*Nx] - tau * (*R_xx_old)[j*Nx] - tau11[j*Nx] * 2 * rx*(v_x[j*(Nx - 1)] - v_x[j*(Nx - 1) + (Nx - 2)]) - tau13[j*Nx] * 2 * rz* (v_z[j*Nx] - v_z[(j - 1)*Nx]));
-				//(*R_zz_new)[j*Nx] = (1 / (2 * tau_sigma + tau))*(2 * tau_sigma* (*R_zz_old)[j*Nx] - tau * (*R_zz_old)[j*Nx] - tau13[j*Nx] * 2 * rx*(v_x[j*(Nx - 1)] - v_x[j*(Nx - 1) + (Nx - 2)]) - tau33[j*Nx] * 2 * rz* (v_z[j*Nx] - v_z[(j - 1)*Nx]));
 				(*R_xx_new)[j*Nx + (Nx - 1)] = (*R_xx_new)[j*Nx];
 				(*R_zz_new)[j*Nx + (Nx - 1)] = (*R_zz_new)[j*Nx];
+
 			}
 		}
-
 #pragma omp parallel 
 		{
 #pragma omp for private(i,j) schedule(guided) 
@@ -835,30 +822,26 @@ void Elasticity2D::Elasticity()
 			{
 				for (i = 0; i < Nx - 1; i++)
 				{
-					(*R_xz_new)[j*(Nx - 1) + i] = (1 / (tau_sigma + tau / 2))*((tau_sigma - tau / 2)*(*R_xz_old)[j*(Nx - 1) + i] - tau55_xz[j*(Nx - 1) + i] * (rx*(v_z[j*Nx + i + 1] - v_z[j*Nx + i]) + rz * (v_x[(j + 1)*(Nx - 1) + i] - v_x[j*(Nx - 1) + i])));
-					//(*R_xz_new)[j*(Nx - 1) + i] = (1 / (2 * tau_sigma + tau))*(2 * tau_sigma*(*R_xz_old)[j*(Nx - 1) + i] - tau * (*R_xz_old)[j*(Nx - 1) + i] - tau55_xz[j*(Nx - 1) + i] * 2 * (rx*(v_z[j*Nx + i + 1] - v_z[j*Nx + i]) + rz * (v_x[(j + 1)*(Nx - 1) + i] - v_x[j*(Nx - 1) + i])));
+					(*R_xz_new)[j*(Nx - 1) + i] = (1 / (tau_sigma + 0.5*tau))*((tau_sigma - 0.5*tau)*(*R_xz_old)[j*(Nx - 1) + i] - tau55_xz[j*(Nx - 1) + i] * (rz*(v_x[(j + 1)*(Nx - 1) + i] - v_x[j*(Nx - 1) + i]) + rx * (v_z[j*Nx + i + 1] - v_z[j*Nx + i])));
 				}
 			}
-		}
+		}*/
 
-
-		// Without PML 
-	
 		//--------sigma---------//
 
 		//boundary condition for sigma_zz on left wall (j==0)
 #pragma omp parallel 
 		{
-#pragma omp for private(i,j,f_src) schedule(guided) 
+#pragma omp for private(i,j,f_src,tmp) schedule(guided) 
 				for (i = 1; i < Nx - 1; i++)
 				{
 					j = 0;
 					f_src = (1 - 2 * (PI*inpData.v0*(cur_time_str - 3 / v0))*(PI*v0*(cur_time_str - 3 / v0)))*exp(-((PI*v0*(cur_time_str - 3 / v0))*(PI*v0*(cur_time_str - 3 / v0))));
 					tmp = rz * c33[j*Nx + i] * (1 / sqrt(rho_z[j*Nx + i] * c33[j*Nx + i]));
-					sigma_zz[j*Nx + i] = (1 / (1 + tmp))*((1 - tmp)*sigma_zz[j*Nx + i] + c33[j*Nx + i] * rz * 2 * v_z[j*Nx + i] + rx * c13[j*Nx + i] * (v_x[j*(Nx - 1) + i] - v_x[j*(Nx - 1) + i - 1]) + src[j*Nx + i] * f_src);
-					//viscoelasiticity
-					sigma_zz[j*Nx + i] = sigma_zz[j*Nx + i] - (tau_sigma)*((*R_zz_new)[j*Nx + i] - (*R_zz_old)[j*Nx + i]);
-
+					sigma_zz[j*Nx + i] = (1 / (1 + tmp))*((1 - tmp)*sigma_zz[j*Nx + i] + c33[j*Nx + i] * rz * 2 * v_z[j*Nx + i] + rx * c13[j*Nx + i] * (v_x[j*(Nx - 1) + i] - v_x[j*(Nx - 1) + i - 1]) +src[j*Nx + i] * f_src);
+				
+					//viscocity
+					//sigma_zz[j*Nx + i] -= tau_sigma * ((*R_zz_new)[j*Nx + i] - (*R_zz_old)[j*Nx + i]);
 				}
 		}
 	
@@ -870,13 +853,26 @@ void Elasticity2D::Elasticity()
 			{
 				for (i = 1; i < Nx - 1; i++)
 				{
-					// ������� ��������� 
+					// sigma_xx, sigma_zz, inside 
+					
+					rr = Rxx[j*Nx + i] * bbb - ccc * (tau11[j*Nx + i] *rx* (v_x[j*(Nx - 1) + i] - v_x[j*(Nx - 1) + i - 1]) + tau13[j*Nx + i] * rz*(v_z[j*Nx + i] - v_z[(j - 1)*Nx + i]));
+					rrxx = tau_sigma * (rr - Rxx[j*Nx + i]);
+					Rxx[j*Nx + i] = rr;
+					rr = Rzz[j*Nx + i] * bbb - ccc * (tau13[j*Nx + i] * rx*(v_x[j*(Nx - 1) + i] - v_x[j*(Nx - 1) + i - 1]) + tau33[j*Nx + i] *rz* (v_z[j*Nx + i] - v_z[(j - 1)*Nx + i]));
+					rrzz = tau_sigma * (rr - Rzz[j*Nx + i]);
+					Rzz[j*Nx + i] = rr;
 					f_src = (1 - 2 * (PI*inpData.v0*(cur_time_str - 3 / v0))*(PI*v0*(cur_time_str - 3 / v0)))*exp(-((PI*v0*(cur_time_str - 3 / v0))*(PI*v0*(cur_time_str - 3 / v0))));
-					sigma_xx[j*Nx + i] = sigma_xx[j*Nx + i] + rx * c11[j*Nx + i] * (v_x[j*(Nx - 1) + i] - v_x[j*(Nx - 1) + i - 1]) + rz * c13[j*Nx + i] * (v_z[j*Nx + i] - v_z[(j - 1)*Nx + i]) + src[j*Nx + i] * f_src;
-					sigma_zz[j*Nx + i] = sigma_zz[j*Nx + i] + rx * c13[j*Nx + i] * (v_x[j*(Nx - 1) + i] - v_x[j*(Nx - 1) + i - 1]) + rz * c33[j*Nx + i] * (v_z[j*Nx + i] - v_z[(j - 1)*Nx + i]) + src[j*Nx + i] * f_src;
-					//viscoelasiticity
-					sigma_xx[j*Nx + i] = sigma_xx[j*Nx + i] - (tau_sigma)*((*R_xx_new)[j*Nx + i] - (*R_xx_old)[j*Nx + i]);
-					sigma_zz[j*Nx + i] = sigma_zz[j*Nx + i] - (tau_sigma)*((*R_zz_new)[j*Nx + i] - (*R_zz_old)[j*Nx + i]);
+					sigma_xx[j*Nx + i] = sigma_xx[j*Nx + i] + rx * c11[j*Nx + i] * (v_x[j*(Nx - 1) + i] - v_x[j*(Nx - 1) + i - 1]) + rz * c13[j*Nx + i] * (v_z[j*Nx + i] - v_z[(j - 1)*Nx + i]) +src[j*Nx + i] * f_src;
+					sigma_zz[j*Nx + i] = sigma_zz[j*Nx + i] + rx * c13[j*Nx + i] * (v_x[j*(Nx - 1) + i] - v_x[j*(Nx - 1) + i - 1]) + rz * c33[j*Nx + i] * (v_z[j*Nx + i] - v_z[(j - 1)*Nx + i]) +src[j*Nx + i] * f_src;
+					//viscocity
+					sigma_xx[j*Nx + i] = sigma_xx[j*Nx + i] - rrxx;
+					sigma_zz[j*Nx + i] = sigma_zz[j*Nx + i] - rrzz;
+					//sigma_zz[j*Nx + i] -= tau_sigma * ((*R_zz_new)[j*Nx + i] - (*R_zz_old)[j*Nx + i]);
+					//sigma_xx[j*Nx + i] -= tau_sigma * ((*R_xx_new)[j*Nx + i] - (*R_xx_old)[j*Nx + i]);
+					/*if (abs(rrxx)>1e-8)
+					{
+						std::cout << rrxx << "   ";
+					}*/
 
 				}
 			}
@@ -885,15 +881,16 @@ void Elasticity2D::Elasticity()
 		//boundary condition for sigma_zz in right wall (j==Nz-1)
 #pragma omp parallel 
 		{
-#pragma omp for private(i,j,f_src) schedule(guided) 
+#pragma omp for private(i,j,f_src,tmp) schedule(guided) 
 				for (i = 1; i < Nx - 1; i++)
 				{
 					j = Nz - 1;
 					tmp = rz * c33[j*(Nx)+i] * (1 / sqrt(rho_z[(j - 1)*Nx + i] * c33[j*Nx + i]));
 					f_src = (1 - 2 * (PI*inpData.v0*(cur_time_str - 3 / v0))*(PI*v0*(cur_time_str - 3 / v0)))*exp(-((PI*v0*(cur_time_str - 3 / v0))*(PI*v0*(cur_time_str - 3 / v0))));
 					sigma_zz[j*Nx + i] = (1 / (1 + tmp))*((1 - tmp)*sigma_zz[j*Nx + i] - c33[j*Nx + i] * rz * 2 * v_z[(j - 1)*Nx + i] + rx * c13[j*Nx + i] * (v_x[j*(Nx - 1) + i] - v_x[j*(Nx - 1) + i - 1]) + src[j*Nx + i] * f_src);
-					//viscoelasiticity
-					sigma_zz[j*Nx + i] = sigma_zz[j*Nx + i] - (tau_sigma)*((*R_zz_new)[j*Nx + i] - (*R_zz_old)[j*Nx + i]);
+					
+					//viscocity
+					//sigma_zz[j*Nx + i] -= tau_sigma * ((*R_zz_new)[j*Nx + i] - (*R_zz_old)[j*Nx + i]);
 
 				}
 		}
@@ -906,10 +903,13 @@ void Elasticity2D::Elasticity()
 		f_src = (1 - 2 * (PI*inpData.v0*(cur_time_str - 3 / v0))*(PI*v0*(cur_time_str - 3 / v0)))*exp(-((PI*v0*(cur_time_str - 3 / v0))*(PI*v0*(cur_time_str - 3 / v0))));
 		tmp = rz * c33[j*Nx + i] * (1 / sqrt(rho_z[j*Nx + i] * c33[j*Nx + i]));
 		sigma_zz[j*Nx + i] = (1 / (1 + tmp))*((1 - tmp)*sigma_zz[j*Nx + i] + c33[j*Nx + i] * rz * 2 * v_z[j*Nx + i] + rx * c13[j*Nx + i] * (v_x[j*(Nx - 1) + i] - v_x[j*(Nx - 1) + (Nx-2)]) + src[j*Nx + i] * f_src);
-		//viscoelasiticity
-		sigma_zz[j*Nx + i] = sigma_zz[j*Nx + i] - (tau_sigma)*((*R_zz_new)[j*Nx + i] - (*R_zz_old)[j*Nx + i]);
-
+		
 		sigma_zz[j*Nx + (Nx - 1)] = sigma_zz[j*Nx];
+
+		//viscocity
+		//sigma_zz[j*Nx + i] -= tau_sigma * ((*R_zz_new)[j*Nx + i] - (*R_zz_old)[j*Nx + i]);
+		//sigma_zz[j*Nx + (Nx-1)] -= tau_sigma * ((*R_zz_new)[j*Nx + (Nx-1)] - (*R_zz_old)[j*Nx + (Nx-1)]);
+		
 
 		//edge (j=Nz-1)
 		j = Nz - 1;
@@ -917,10 +917,11 @@ void Elasticity2D::Elasticity()
 		f_src = (1 - 2 * (PI*v0*(cur_time_str - 3 / v0))*(PI*v0*(cur_time_str - 3 / v0)))*exp(-((PI*v0*(cur_time_str - 3 / v0))*(PI*v0*(cur_time_str - 3 / v0))));
 		tmp = rz * c33[j*Nx + i] * (1 / sqrt(rho_z[(j - 1)*Nx + i] * c33[j*Nx + i]));
 		sigma_zz[j*Nx] = (1 / (1 + tmp))*((1 - tmp)*sigma_zz[j*Nx + i] - c33[j*Nx + i] * rz * 2 * v_z[(j - 1)*Nx + i] + rx * c13[j*Nx] * (v_x[j*(Nx - 1)] - v_x[j*(Nx - 1) + (Nx - 2)]) + src[j*Nx] * f_src);
-		//viscoelasticity
-		sigma_zz[j*Nx] = sigma_zz[j*Nx] - (tau_sigma)*((*R_zz_new)[j*Nx] - (*R_zz_old)[j*Nx]);
-
+		
 		sigma_zz[j*Nx + (Nx - 1)] = sigma_zz[j*Nx];
+		//viscocity
+		//sigma_zz[j*Nx + i] -= tau_sigma * ((*R_zz_new)[j*Nx + i] - (*R_zz_old)[j*Nx + i]);
+		//sigma_zz[j*Nx + (Nx - 1)] -= tau_sigma * ((*R_zz_new)[j*Nx + (Nx - 1)] - (*R_zz_old)[j*Nx + (Nx - 1)]);
 
 
 #pragma omp parallel 
@@ -928,16 +929,30 @@ void Elasticity2D::Elasticity()
 #pragma omp for private(j,f_src) schedule(guided) 
 			for (j = 1; j < Nz - 1; j++)
 			{
-				// ������� ��������� 
+				// top and bottom boundary condition (periodic)
+				rr = Rxx[j*Nx + i] * bbb - ccc * (tau11[j*Nx + i] * rx*(v_x[j*(Nx - 1) + i] - v_x[j*(Nx - 1) + (Nx-2)]) + tau13[j*Nx + i] *rz* (v_z[j*Nx + i] - v_z[(j - 1)*Nx + i]));
+				rrxx = tau_sigma * (rr - Rxx[j*Nx + i]);
+				Rxx[j*Nx + i] = rr;
+				rr = Rzz[j*Nx + i] * bbb - ccc * (tau13[j*Nx + i] * rx*(v_x[j*(Nx - 1) + i] - v_x[j*(Nx - 1) + (Nx-2)]) + tau33[j*Nx + i] * rz*(v_z[j*Nx + i] - v_z[(j - 1)*Nx + i]));
+				rrzz = tau_sigma * (rr - Rzz[j*Nx + i]);
+				Rzz[j*Nx + i] = rr;
 				f_src = (1 - 2 * (PI*v0*(cur_time_str - 3 / v0))*(PI*v0*(cur_time_str - 3 / v0)))*exp(-((PI*v0*(cur_time_str - 3 / v0))*(PI*v0*(cur_time_str - 3 / v0))));
 				sigma_xx[j*Nx] = sigma_xx[j*Nx] + rx * c11[j*Nx] * (v_x[j*(Nx - 1)] - v_x[j*(Nx - 1) + (Nx - 2)]) + rz * c13[j*Nx] * (v_z[j*Nx] - v_z[(j - 1)*Nx]) + src[j*Nx] * f_src;
 				sigma_zz[j*Nx] = sigma_zz[j*Nx] + rx * c13[j*Nx] * (v_x[j*(Nx - 1)] - v_x[j*(Nx - 1) + (Nx - 2)]) + rz * c33[j*Nx] * (v_z[j*Nx] - v_z[(j - 1)*Nx]) + src[j*Nx] * f_src;
-				//viscoelasticity
-				sigma_xx[j*Nx] = sigma_xx[j*Nx] - (tau_sigma)*((*R_xx_new)[j*Nx] - (*R_xx_old)[j*Nx]);
-				sigma_zz[j*Nx] = sigma_zz[j*Nx] - (tau_sigma)*((*R_zz_new)[j*Nx] - (*R_zz_old)[j*Nx]);
+				
+				//viscocity
+				sigma_zz[j*Nx] = sigma_zz[j*Nx] - rrzz;
+				sigma_xx[j*Nx] = sigma_xx[j*Nx] - rrxx;
 
 				sigma_xx[j*Nx + (Nx - 1)] = sigma_xx[j*Nx];
 				sigma_zz[j*Nx + (Nx - 1)] = sigma_zz[j*Nx];
+
+			
+				//sigma_zz[j*Nx] -= tau_sigma * ((*R_zz_new)[j*Nx] - (*R_zz_old)[j*Nx]);
+				//sigma_xx[j*Nx] -= tau_sigma * ((*R_xx_new)[j*Nx] - (*R_xx_old)[j*Nx]);
+				//sigma_zz[j*Nx+(Nx-1)] -= tau_sigma * ((*R_zz_new)[j*Nx] - (*R_zz_old)[j*Nx]);
+				//sigma_xx[j*Nx+(Nx-1)] -= tau_sigma * ((*R_xx_new)[j*Nx] - (*R_xx_old)[j*Nx]);
+
 			}
 		}
 #pragma omp parallel 
@@ -947,18 +962,24 @@ void Elasticity2D::Elasticity()
 			{
 				for (i = 0; i < Nx - 1; i++)
 				{
-					sigma_xz[j*(Nx - 1) + i] = sigma_xz[j*(Nx - 1) + i] + c55_xz[j*(Nx - 1) + i] * (rx*(v_z[j*Nx + i + 1] - v_z[j*Nx + i]) + rz * (v_x[(j + 1)*(Nx - 1) + i] - v_x[j*(Nx - 1) + i]));
-					//viscoelasticity
-					sigma_xz[j*(Nx - 1) + i] = sigma_xz[j*(Nx - 1) + i] - (tau_sigma)*((*R_xz_new)[j*(Nx - 1) + i] - (*R_xz_old)[j*(Nx - 1) + i]);
+					rr = Rxz[j*(Nx - 1) + i] * bbb - ccc * tau55_xz[j*(Nx - 1) + i] * (rx*(v_z[j*Nx + i + 1] - v_z[j*Nx + i]) + rz * (v_x[(j + 1)*(Nx - 1) + i] - v_x[j*(Nx - 1) + i]));
+					rrxz = tau_sigma * (rr - Rxz[j*(Nx - 1) + i]);
+					Rxz[j*(Nx - 1) + i] = rr;
+
+					sigma_xz[j*(Nx - 1) + i] = sigma_xz[j*(Nx - 1) + i] + c55_xz[j*(Nx - 1) + i] * (rx*(v_z[j*Nx + i + 1] - v_z[j*Nx + i]) + rz * (v_x[(j + 1)*(Nx - 1) + i] - v_x[j*(Nx - 1) + i]));// +src[j*Nx] * f_src;
+					
+					//viscocity
+					sigma_xz[j*(Nx - 1) + i] = sigma_xz[j*(Nx - 1) + i] - rrxz;
+					//sigma_xz[j*(Nx - 1) + i] -= tau_sigma * ((*R_xz_new)[j*(Nx - 1) + i] - (*R_xz_old)[j*(Nx - 1) + i]);
 				}
 			}
 		}
-		// ���������� �������� �������� � ������� ������ �� n+1 (�������������� ����������) 
+		// ---------------u_x, u_z----------------//
 
 		//bc for u_x on left wall (j==0)
 #pragma omp parallel 
 		{
-#pragma omp for private(i,j,c1,c2,c3,c4) schedule(guided) 
+#pragma omp for private(i,j,tmp) schedule(guided) 
 				for (i = 0; i < Nx - 1; i++)
 				{
 					j = 0;
