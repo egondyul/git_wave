@@ -4,7 +4,7 @@ dfreq=20000;
 
 for i=1:1 %session
     for j=1:2 %cases
-        for k=1:2 %frequency
+        for k=1:1 %frequency
             out(k,j)=ResExport(freq,j,[num2str(i) '/']);
             freq=freq+dfreq;
         end  

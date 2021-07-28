@@ -9,9 +9,9 @@ Fn = 'grid.bin';
 F = fopen([path1 Fn],'r');
 Nx = fread(F,1,'int');
 trash = fread(F,1,'int');
-trash = fread(F,1,'float');
-dz = fread(F,1,'float');
-dt = fread(F,1,'float');
+trash = fread(F,1,'double');
+dz = fread(F,1,'double');
+dt = fread(F,1,'double');
 fclose(F);
 
 out.dz = dz;
@@ -42,11 +42,11 @@ out.LayerWidth = LayerSize*dz;
 
 %% read the data (v_z)
 p_rec_1 = fopen([path1 'v_z_rec_1.bin'],'r');     
-PREC1 = fread(p_rec_1,[Nx,inf],'float');
+PREC1 = fread(p_rec_1,[Nx,inf],'double');
 fclose(p_rec_1);
 
 p_rec_2 = fopen([path1 'v_z_rec_2.bin'],'r');
-PREC2 = fread(p_rec_2,[Nx,inf],'float');
+PREC2 = fread(p_rec_2,[Nx,inf],'double');
 fclose(p_rec_2);
 
 out.time = ((1:1:size(PREC1,2))*dt).';

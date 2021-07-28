@@ -148,8 +148,10 @@ for i=1:NCase
     cc=ccM(i,:);
     figure(ResFigV);
     plot(Frequency, Velocity(:,i)','v','Color',cc);
+    legend;
     figure(ResFigIQ);
     plot(Frequency, InverseQualityFactor(:,i)','v','Color',cc);
+    legend;
 end
 
 % plot splines

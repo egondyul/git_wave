@@ -12,7 +12,7 @@
 
 using namespace std;
 
-typedef float realval;
+typedef double realval;
 typedef long myint; //for WINDOWS
 
 class Elasticity2D
@@ -106,6 +106,8 @@ private:
 	realval *tau33;
 	realval *tau55_xz;
 
+	int K = 1;
+
 	//coordinate of source
 	realval *src;
 
@@ -116,7 +118,7 @@ private:
 	realval cur_time, cur_time_str;			// время на текущем шаге для скоростей и напряжений соответственно
 	realval rx, rz;							// tau/hx, tau/hz
 	realval DtPlot;                       // вспомогательные параметры и функция источника и его частота
-	const realval PI = 3.14159265f;
+	const realval PI = 3.14159265;
 	int flag = 0;
 
 };
